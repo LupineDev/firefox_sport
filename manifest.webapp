@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "name": "Firefox Sport",
+  "description": "GPS acvivity tracker for your favorite outdoor spoorts",
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "Chris Sass",
+    "url": "https://github.com/LupineDev/firefox_sport"
+  }
+}
