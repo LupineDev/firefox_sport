@@ -3,6 +3,10 @@
   "name": "Firefox Sport",
   "description": "GPS acvivity tracker for your favorite outdoor spoorts",
   "launch_path": "/index.html",
+  "icons": { "60": "/images/icon_60_cloud.png"},
+  "permissions": {
+    "geolocation": { "description": "Needed to track your sports" }
+  },
   "developer": {
     "name": "Chris Sass",
     "url": "https://github.com/LupineDev/firefox_sport"
