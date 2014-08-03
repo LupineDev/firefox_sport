@@ -43,11 +43,11 @@ activity.Activity = function(activityType) {
 
 activity.controller = function() {
   this.status = m.prop("Not started");
-  this.activity = m.prop(null);
+  this.activity = m.prop(new activity.Activity(this.activityType));
   this.activityType = m.prop(activity.availableTypes[0]);
 
   this.start = function() {
-    this.activity(new activity.Activity(this.activityType));
+    console.log("starting activity...");
   }.bind(this);
 
   this.buttonText = function() {
@@ -63,16 +63,17 @@ activity.view = function(ctrl) {
   return m("html", [
     m("body", [
       m("head", [
-        m("link", {href: "/style/headers.css", rel: "stylesheet", type: "text/css"}),
         m("link", {href: "/style/buttons.css", rel: "stylesheet", type: "text/css"}),
-        m("link", {href: "/style/input_areas.css", rel: "stylesheet", type: "text/css"})
+        m("link", {href: "/style/lists.css", rel: "stylesheet", type: "text/css"}),
+        m("link", {href: "/style/headers.css", rel: "stylesheet", type: "text/css"}),
+        m("link", {href: "/style/input_areas.css", rel: "stylesheet", type: "text/css"}),
       ]),
       m("section", {class: "skin-organic", role: "region"}, [
         m("header", [
           m("h1", "Firefox Sport")
         ])
       ]),
-      m("section", [
+      m("section", {role: "region"}, [
         m("select",
           {onchange: m.withAttr("value", ctrl.activityType), value: ctrl.activityType()},
           [
@@ -82,6 +83,14 @@ activity.view = function(ctrl) {
           ]
         ),
         m("button", {class: "recommend", onclick: ctrl.start}, ctrl.buttonText()),
+      ]),
+      m("section", {"role": "region"}, [
+        m("h3", "Current Activity"),
+        m("p","Elapsed Time: " + ctrl.activity().elapsedTime()),
+        m("p","Distance: " + ctrl.activity().distance()),
+        m("p","Average Pace: " + ctrl.activity().avgPace()),
+        m("p","Current Pace: " + ctrl.activity().curPace()),
+        m("p","GPS Accuracy: " + ctrl.activity().gpsAccuracy()),
       ])
     ])
   ]);
