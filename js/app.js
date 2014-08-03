@@ -1,48 +1,65 @@
 
-// var geoStatusMsg = document.getElementById("geoStatus");
+activity = {}
 
-/*if ("geolocation" in navigator) {
-  geoStatusMsg.innerHTML = "GPS IS AVAILABLE";
-} else {
-  geoStatusMsg.innerHTML = "GPS IS OFF";
-} */
-// geoStatusMsg.innerHTML = "poopy";
-// geoStatusMsg.text = "pee";
-
-//  trying mithril stuff
-//for simplicity, we use this module to namespace the model classes
-
-//the Todo class has two properties
-
-todo = {};
-todo.Todo = function(data) {
-  this.description = m.prop(data.description);
-  this.done = m.prop(false);
+activity.geoStatus = function() {
+  if ("geolocation" in navigator) {
+    /* geolocation is available */
+    return "GPS Available";
+  } else {
+    /* geolocation IS NOT available */
+    return"No GPS";
+  }
 };
 
-//the TodoList class is a list of Todo's
-todo.TodoList = Array;
+activity.availableTypes = [
+  "Running",
+  "Walking",
+  "Cycling",
+  "Hiking"
+]
 
-//the controller uses three model-level entities, of which one is a custom defined class:
-//`Todo` is the central class in this application
-//`list` is merely a generic array, with standard array methods
-//`description` is a temporary storage box that holds a string
-//
-//the `add` method simply adds a new todo to the list
-todo.controller = function() {
-  this.list = new todo.TodoList();
-  this.description = m.prop("");
+activity.Pos = function(data) {
+  this.lat = data.lat;
+  this.lng = data.lng;
+  this.time = data.time;
+};
 
-  this.add = function() {
-    if (this.description()) {
-      this.list.push(new todo.Todo({description: this.description()}));
-      this.description("");
-    }
+activity.PosList = Array;
+
+activity.Activity = function(activityType) {
+  this.startedAt = (new Date()).getTime();
+  this.activityType = m.prop(activityType);
+  this.elapsedTime = m.prop(0);
+  this.distance = m.prop(0);
+  this.elevDistance = m.prop(0);
+  this.avgPace = m.prop(0);
+  this.curPace = m.prop(0);
+  this.lastPos = new activity.Pos(
+    {lat: 'start', lng: 'start', time: (new Date()).getTime()}
+  );
+  this.posList = new activity.PosList();
+  this.gpsAccuracy = m.prop(0);
+}
+
+activity.controller = function() {
+  this.status = m.prop("Not started");
+  this.activity = m.prop(null);
+  this.activityType = m.prop(activity.availableTypes[0]);
+
+  this.start = function() {
+    this.activity(new activity.Activity(this.activityType));
   }.bind(this);
-};
 
-//here's the view
-todo.view = function(ctrl) {
+  this.buttonText = function() {
+    if (this.status() == "Started") {
+      return "Stop " + this.activityType();
+    } else {
+      return "Start " + this.activityType();
+    }
+  }
+}
+
+activity.view = function(ctrl) {
   return m("html", [
     m("body", [
       m("head", [
@@ -52,26 +69,44 @@ todo.view = function(ctrl) {
       ]),
       m("section", {class: "skin-organic", role: "region"}, [
         m("header", [
-          m("h1", "ToDo App")
+          m("h1", "Firefox Sport")
         ])
       ]),
       m("section", [
-        m("input", {type: "text", onchange: m.withAttr("value", ctrl.description), value: ctrl.description()}),
-        m("button", {class: "recommend", onclick: ctrl.add}, "Add"),
-        m("table", [
-          ctrl.list.map(function(task, index) {
-            return m("tr", [
-              m("td", [
-                m("input[type=checkbox]", {onclick: m.withAttr("checked", task.done), checked: task.done()})
-              ]),
-              m("td", {style: {textDecoration: task.done() ? "line-through" : "none"}}, task.description()),
-            ])
-          })
-        ])
+        m("select",
+          {onchange: m.withAttr("value", ctrl.activityType), value: ctrl.activityType()},
+          [
+            activity.availableTypes.map(function(activityType, index) {
+              return m('option', {value: activityType}, activityType);
+            })
+          ]
+        ),
+        m("button", {class: "recommend", onclick: ctrl.start}, ctrl.buttonText()),
       ])
     ])
   ]);
 };
 
 //initialize the application
-m.module(document, todo);
+m.module(document, activity);
+
+var options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+
+function success(pos) {
+  var crd = pos.coords;
+
+  console.log('Your current position is:');
+  console.log('Latitude : ' + crd.latitude);
+  console.log('Longitude: ' + crd.longitude);
+  console.log('More or less ' + crd.accuracy + ' meters.');
+};
+
+function error(err) {
+  console.warn('ERROR(' + err.code + '): ' + err.message);
+};
+
+navigator.geolocation.getCurrentPosition(success, error, options);
