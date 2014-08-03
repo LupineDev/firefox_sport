@@ -48,13 +48,45 @@ activity.controller = function() {
 
   this.start = function() {
     console.log("starting activity...");
+    this.status("Started");
   }.bind(this);
 
-  this.buttonText = function() {
+  this.stop = function() {
+    console.log("stopping activity...");
+    this.status("Not Started");
+  }.bind(this);
+
+  this.isStarted = function() {
     if (this.status() == "Started") {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  this.toggleStarted = function() {
+    console.log("isStarted", this.isStarted());
+    console.log("status", this.status());
+    if (this.isStarted() == true) {
+      this.stop();
+    } else {
+      this.start();
+    }
+  }.bind(this)
+
+  this.buttonText = function() {
+    if (this.isStarted()) {
       return "Stop " + this.activityType();
     } else {
       return "Start " + this.activityType();
+    }
+  }
+
+  this.buttonClass = function() {
+    if (this.isStarted() == true) {
+      return "danger";
+    } else {
+      return "recommend";
     }
   }
 }
@@ -68,21 +100,21 @@ activity.view = function(ctrl) {
         m("link", {href: "/style/headers.css", rel: "stylesheet", type: "text/css"}),
         m("link", {href: "/style/input_areas.css", rel: "stylesheet", type: "text/css"}),
       ]),
-      m("section", {class: "skin-organic", role: "region"}, [
+      m("section", {class: "", role: "region"}, [
         m("header", [
           m("h1", "Firefox Sport")
         ])
       ]),
       m("section", {role: "region"}, [
-        m("select",
-          {onchange: m.withAttr("value", ctrl.activityType), value: ctrl.activityType()},
+        m("p",[m("select",
+          {onchange: m.withAttr("value", ctrl.activityType), disabled: ctrl.isStarted(), value: ctrl.activityType()},
           [
             activity.availableTypes.map(function(activityType, index) {
               return m('option', {value: activityType}, activityType);
             })
           ]
-        ),
-        m("button", {class: "recommend", onclick: ctrl.start}, ctrl.buttonText()),
+        )]),
+        m("button", {class: ctrl.buttonClass(), onclick: ctrl.toggleStarted}, ctrl.buttonText()),
       ]),
       m("section", {"role": "region"}, [
         m("h3", "Current Activity"),
