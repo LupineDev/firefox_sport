@@ -27,18 +27,49 @@ activity.Pos = function(data) {
 activity.PosList = Array;
 
 activity.Activity = function(activityType) {
-  this.startedAt = (new Date()).getTime();
+  this.startedAt = m.prop(null);
   this.activityType = m.prop(activityType);
   this.elapsedTime = m.prop(0);
   this.distance = m.prop(0);
   this.elevDistance = m.prop(0);
   this.avgPace = m.prop(0);
   this.curPace = m.prop(0);
-  this.lastPos = new activity.Pos(
-    {lat: 'start', lng: 'start', time: (new Date()).getTime()}
-  );
+  this.curPos = m.prop(null);
+  this.lastPos = m.prop(null);
   this.posList = new activity.PosList();
   this.gpsAccuracy = m.prop(0);
+  this.gpsWatcher = m.prop(null);
+
+  this.startTracking = function() {
+    this.startedAt((new Date()).getTime());
+    this.lastPos(new activity.Pos(
+      {lat: 'start', lng: 'start', time: (new Date()).getTime()}
+    ));
+    this.gpsWatcher(navigator.geolocation.watchPosition(
+      this.watchLocation,
+      this.gpsError,
+      {enableHighAccurace: true, maximumAge: 0}
+    ));
+  }
+
+  this.watchLocation = function(location) {
+    this.curPos(new activity.Pos({
+      lat: location.coords.latitude,
+      lng: location.coords.longitude,
+      time: location.coords.timestamp
+    }))
+    this.gpsAccuracy(location.coords.accuracy);
+  }.bind(this)
+
+  this.stopTracking = function() {
+    if (this.gpsWatcher() != null) {
+      navigator.geolocation.clearWatch(this.gpsWatcher());
+    }
+  }
+
+  this.gpsError = function() {
+    alert("Error getting GPS location...");
+  }
 }
 
 activity.controller = function() {
@@ -49,11 +80,13 @@ activity.controller = function() {
   this.start = function() {
     console.log("starting activity...");
     this.status("Started");
+    this.activity().startTracking();
   }.bind(this);
 
   this.stop = function() {
     console.log("stopping activity...");
     this.status("Not Started");
+    this.activity().stopTracking();
   }.bind(this);
 
   this.isStarted = function() {
@@ -114,7 +147,6 @@ activity.view = function(ctrl) {
             })
           ]
         )]),
-        m("button", {class: ctrl.buttonClass(), onclick: ctrl.toggleStarted}, ctrl.buttonText()),
       ]),
       m("section", {"role": "region"}, [
         m("h3", "Current Activity"),
@@ -123,7 +155,10 @@ activity.view = function(ctrl) {
         m("p","Average Pace: " + ctrl.activity().avgPace()),
         m("p","Current Pace: " + ctrl.activity().curPace()),
         m("p","GPS Accuracy: " + ctrl.activity().gpsAccuracy()),
-      ])
+      ]),
+      m("section", {"role": "region"}, [
+        m("button", {class: ctrl.buttonClass(), onclick: ctrl.toggleStarted}, ctrl.buttonText()),
+      ]),
     ])
   ]);
 };
